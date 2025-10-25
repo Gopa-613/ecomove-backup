@@ -21,14 +21,7 @@ import time
 from streamlit_lottie import st_lottie
 import requests
 
-st.set_page_config(page_title="Vehicle ML Dashboard", layout="wide")
-# Set custom CSS to change background color
-# Force background color
-#background_color = "#9CDBA6"  # Light gray
-# Sidebar for user interaction
-
-
-
+st.set_page_config(page_title="Prediction Dashboard", layout="wide")
 
 # Custom CSS for Bona Nova font with higher specificity
 st.markdown(
@@ -78,42 +71,37 @@ st.sidebar.markdown(
     /* Style for Navigation header background */
     .navigation-header {
         font-size: 1.5em;
-    border-bottom: 2px solid #cccc;
-    font-weight: bold;
-    background-color: #081c15;
-    margin-bottom: 2px;
-    /* border-radius: 5px; */
-    width: 118%;
-    padding: 10px;
-    position: absolute;
-    height: 128px;
-    top: -90px;
-    left: -25px;
+        border-bottom: 2px solid #cccc;
+        font-weight: bold;
+        background-color: #081c15;
+        margin-bottom: 2px;
+        /* border-radius: 5px; */
+        width: 118%;
+        padding: 10px;
+        position: absolute;
+        height: 128px;
+        top: -90px;
+        left: -25px;
     }
     
     .navigation-header p{
-    color: white;
-    position: absolute;
-    top: 60px;
-    left: 26px;
+        color: white;
+        position: absolute;
+        top: 60px;
+        left: 26px;
     }
     </style>
     <div class="navigation-header"><p>Ecomove</p></div>
-    
     """,
     unsafe_allow_html=True
 )
-
-
 
 # Set page config
 # Set Matplotlib style to ensure light backgrounds
 plt.style.use('default')  # Reset to default Matplotlib style
 sns.set_style("whitegrid")  # White background with grid
+
 # Sidebar navigation
-#st.sidebar.title("Navigation")
-# Sidebar navigation
-#st.sidebar.title("Navigation")
 page = st.sidebar.radio(" ", [
     "Home", 
     "Motor Cars", 
@@ -124,35 +112,23 @@ data = pd.read_csv('dataset/ts.csv')
 
 # Home Page
 if page == "Home":
-    st.title("Vehicle Machine Learning Dashboard")
+    st.title("Prediction Dashboard")
     st.write("Explore predictions and visualizations for motor cars, battery electric vehicles, and AQI classification")
     #st.markdown("[Visit Front-End Website](../frontend/index.html)")
-    st.markdown("EcoMove is your gateway to understanding the environmental footprint of the vehicles that power our world. By harnessing advanced machine learning and real-time data analysis, EcoMove compares the impact of Petrol, Diesel, and Electric vehicles through key pollutants like CO2, NOx, and more. From buses to motorcycles, our interactive platform reveals which fuel types harm our planet most and forecasts future trends to guide sustainable choices. Explore stunning visualizations, dive into predictive insights, and join us in steering toward a greener future with EcoMove! [Visit Front-End Website](../frontend/index.html)")
+    st.markdown("Ecomove is your gateway to understanding the environmental footprint of the vehicles that power our world. By harnessing real-time data analysis, Ecomove compares the impact of Petrol, Diesel, and Electric vehicles through key pollutants like CO₂, NOx, and more. From buses to motorcycles, our interactive platform reveals which fuel types harm our planet most and forecasts future trends to guide sustainable choices. Explore stunning visualizations, dive into predictive insights, and join us in steering toward a greener future with Ecomove!   ")
     st.write("Use the sidebar to navigate to different sections.")
-
 
 # Motor Cars Regression
 elif page == "Battery Cars":
-    st.title("Battery Cars Production and Emissions")
-    
-    
-    
-    # Load models and preprocessors
-    #reg_model = joblib.load('models/motor_mt_model.pkl')
-    #scaler = joblib.load('models/motor_mt_scaler.pkl')
-    #poly = joblib.load('models/motor_mt_poly.pkl')  # Load PolynomialFeatures
+    st.title("CO₂ Production from Battery Electric Vehicles (BEV)")
+    # Graph 1: Actual vs Predicted CO₂ Emissions (2010–2020)
+    fig1 = go.Figure()
 
-    
-
-
-    # User input for regression prediction
-    st.subheader("Prediction of CO2 produced from Battery")
     X = data[['year', 'BEV_sales']]
     y = data['bev_kt']
     
     # Log-transform bev_sales to reduce skewness
     X['bev_sales_log'] = np.log1p(X['BEV_sales'])
-
     
     # Create year_offset feature
     X['year_offset'] = X['year'] - 2010
@@ -180,38 +156,21 @@ elif page == "Battery Cars":
     y_pred_train_poly = np.maximum(best_ridge_poly.predict(X_scaled_poly), 0)
     
     actual_pred_df = pd.DataFrame({
-    'Year': data['year'],
-    'BEV Sales': data['BEV_sales'],
-    'Actual battery production': y,
-    'Predicted battery production': y_pred_train_poly
+        'Year': data['year'],
+        'BEV Sales': data['BEV_sales'],
+        'Actual battery production': y,
+        'Predicted battery production': y_pred_train_poly
     })
-    st.write(actual_pred_df)
-    
-    fig2  = plt.figure(figsize=(10, 6))
-    plt.scatter(data['year'], y, color='green', label='Actual Battery production', s=100, alpha=0.8)
-    plt.plot(data['year'], y_pred_train_poly, marker='o', color='red', label='Predicted Battery production', linewidth=2)
-    plt.title('Actual vs. Predicted CO2 produced from Battery (2010–2020)')
-    plt.xlabel('Year')
-    plt.ylabel('CO2 produced from Battery')
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-    st.pyplot(fig2)
 
+    # Graph 2: Predicted CO₂ Emissions (2021–2030)
+    fig2 = go.Figure()
 
-
-
-
-    #PREDICTION FROM 2021-2030
+    # PREDICTION FROM 2021-2030
     # Create future data for 2021–2030
     years_future = np.arange(2021, 2031)
     # Assume 10% exponential growth for BEV Sales from 2,000,000 (2020)
     bev_sales_2020 = 2000000
     bev_sales_future = bev_sales_2020 * (1 + 0.1) ** (years_future - 2020)
-
-    # Replace with specific BEV Sales if available, e.g.:
-    # bev_sales_future = [2200000, 2500000, 2900000, 3400000, 4000000, 4700000, 5500000, 6400000, 7400000, 8500000]
 
     # Prepare future data
     future_data = pd.DataFrame({
@@ -232,27 +191,65 @@ elif page == "Battery Cars":
         'BEV Sales': bev_sales_future,
         'Predicted battery production': y_pred_future_poly
     })
-    st.write("\nTable: Predicted CO2 Emissions from Battery for 2021–2030")
-    st.write(predictions_df)
 
-    # Plot 2: Combined Actual (2010–2020) and Predicted (2021–2030)
-    fig3  = plt.figure(figsize=(10, 6))
-    # Actual (2010–2020)
-    plt.scatter(data['year'], y, color='green', label='Actual bev_kt', s=100, alpha=0.8)
-    # Predicted (2021–2030)
-    plt.plot(years_future, y_pred_future_poly, marker='o', color='blue', label='Predicted bev_kt', linewidth=2)
-    plt.axvline(x=2020, color='gray', linestyle='--', label='2020 (Transition)', alpha=0.7)
-    plt.title('CO2 produced from Battery: Actual (2010–2020) and Predicted (2021–2030)')
-    plt.xlabel('Year')
-    plt.ylabel('CO2 produced from Battery')
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-    st.pyplot(fig3)
+    # Add scatter for actual values (2010–2020)
+    fig2.add_trace(
+        go.Scatter(
+            x=data['year'],
+            y=y,
+            mode='markers',
+            name='Actual Battery Production',
+            marker=dict(color='green', size=10, opacity=0.8),
+            hovertemplate='Year: %{x}<br>CO₂ (kt): %{y:.2f}<extra></extra>'
+        )
+    )
 
+    # Add line for predicted values (2021–2030)
+    fig2.add_trace(
+        go.Scatter(
+            x=years_future,
+            y=y_pred_future_poly,
+            mode='lines+markers',
+            name='Predicted Battery Production',
+            line=dict(color='blue', width=2),
+            marker=dict(size=8),
+            hovertemplate='Year: %{x}<br>CO₂ (kt): %{y:.2f}<extra></extra>'
+        )
+    )
+
+    # Add transition line at 2020
+    fig2.add_vline(x=2020, line=dict(color='gray', dash='dash'), annotation_text='2020 (Transition)')
+
+    fig2.update_layout(
+        title='CO₂ Produced from Battery: Actual (2010–2020) and Predicted (2021–2030)',
+        xaxis_title='Year',
+        yaxis_title='CO₂ Produced from Battery (megatonnes)',
+        hovermode='x unified',
+        showlegend=True,
+        template='plotly_white',
+        xaxis=dict(gridcolor='rgba(200,200,200,0.3)'),
+        yaxis=dict(gridcolor='rgba(200,200,200,0.3)')
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+    # Graph 3: ARIMA Forecast (2021–2035)
+    fig3 = go.Figure()
+
+    # Add line for historical data
+    fig3.add_trace(
+        go.Scatter(
+            x=data.index,
+            y=data['bev_kt'],
+            mode='lines+markers',
+            name='Historical Battery Production',
+            line=dict(color='blue', width=2),
+            marker=dict(size=8),
+            hovertemplate='Year: %{x|%Y}<br>CO₂ (kt): %{y:.2f}<extra></extra>'
+        )
+    )
+    
     # ARIMA forecast
-    st.subheader("ARIMA Forecast (2021-2035)")
     # Set 'year' as the index for ARIMA (optional, but helps with time series)
     data['year'] = pd.to_datetime(data['year'], format='%Y')  # Convert year to datetime
     data.set_index('year', inplace=True)
@@ -260,9 +257,6 @@ elif page == "Battery Cars":
     # Fit ARIMA model (p=1, d=1, q=1 as a starting point)
     model = ARIMA(data['bev_kt'], order=(1, 1, 1))
     model_fit = model.fit()
-
-    # Summary of the model
-    #print(model_fit.summary())
 
     # Forecast next 15 years (2021-2035)
     forecast_steps = 15
@@ -273,30 +267,61 @@ elif page == "Battery Cars":
     forecast_years = pd.date_range(start=f'{last_year + 1}-01-01', periods=forecast_steps, freq='YS')
     forecast_series = pd.Series(forecast, index=forecast_years)
 
-    # Print forecast with years
-    st.write("\nForecasted CO2 Produced from Battery (2021-2035):")
-    st.write(forecast_series)
+    # Combine for setting accurate x-axis range
+    combined_years = list(data.index.year) + list(forecast_series.index.year)
 
-    # Plot historical and forecast data
-    fig1  = plt.figure(figsize=(10, 6))
-    plt.plot(data.index, data['bev_kt'], label='Historical')
-    plt.plot(forecast_series.index, forecast_series, label='Forecast', linestyle='--')
-    plt.legend()
-    plt.title('CO2 Produced from Battery Forecast')
-    plt.xlabel('Year')
-    plt.ylabel('CO2 Produced from Battery')
-    plt.grid(True)
-    plt.show()
-    st.pyplot(fig1)
+    # Plot
+    fig3 = go.Figure()
 
- 
- 
- 
- 
- 
-    
+    # Historical trace
+    fig3.add_trace(
+        go.Scatter(
+            x=data.index.year,
+            y=data['bev_kt'],
+            mode='lines+markers',
+            name='Historical',
+            line=dict(color='royalblue', width=3),
+            marker=dict(size=6),
+            hovertemplate='Year: %{x}<br>CO₂: %{y:.2f} kt<extra></extra>'
+        )
+    )
+
+    # Forecast trace
+    fig3.add_trace(
+        go.Scatter(
+            x=forecast_series.index.year,
+            y=forecast_series,
+            mode='lines+markers',
+            name='Forecast',
+            line=dict(color='orange', width=3, dash='dash'),
+            marker=dict(size=6),
+            hovertemplate='Year: %{x}<br>CO₂: %{y:.2f} kt<extra></extra>'
+        )
+    )
+
+    # Final layout
+    fig3.update_layout(
+        title='CO₂ Produced from Battery Forecast (2021–2035)',
+        xaxis_title='Year',
+        yaxis_title='CO₂ produced from Battery (megatonnes)',
+        hovermode='x unified',
+        template='plotly_white',
+        xaxis=dict(
+            tickmode='linear',
+            dtick=1,
+            range=[min(combined_years) - 1, max(combined_years) + 1],  # clean range
+            gridcolor='rgba(200,200,200,0.3)'
+        ),
+        yaxis=dict(
+            gridcolor='rgba(200,200,200,0.3)',
+            range=[data['bev_kt'].min() - 10, forecast_series.max() + 10]
+        )
+    )
+
+    st.plotly_chart(fig3, use_container_width=True)
+
 elif page == "Motor Cars":
-    st.title("Motor Cars Production and Emissions") 
+    st.title("CO₂ Production from Motor Vehicles") 
     
     # 1. Load Data
     X = data[['year', 'total_motor_cars_production']]
@@ -318,8 +343,6 @@ elif page == "Motor Cars":
     ridge_model.fit(X_poly_scaled_df, y)
     predictions = ridge_model.predict(X_poly_scaled_df)
 
-    
-
     # 6. Create Table for Actual vs Predicted
     results_2010_2020 = pd.DataFrame({
         'Year': data['year'],
@@ -327,26 +350,6 @@ elif page == "Motor Cars":
         'Actual motor_mt': y,
         'Predicted motor_mt': predictions
     })
-    st.write(results_2010_2020)
-
-    
-    # 7. Plot Actual vs Predicted
-    fig3 = plt.figure(figsize=(10, 5))
-    plt.scatter(data['year'], y, color='blue', label='Actual motor_mt', s=100)
-    plt.plot(data['year'], predictions, color='red', marker='o', linestyle='--', label='Predicted motor_mt')
-    plt.xlabel('Year')
-    plt.ylabel('CO2 produced from Motor')
-    plt.title('Actual vs Predicted CO2 Emissions from Motor (2010–2020)')
-    plt.legend()
-    plt.grid(True)
-    plt.tight_layout()
-    plt.show()
-    st.pyplot(fig3)
-    
-    
-    
-    
-    # 1. Load and Preprocess Data
 
     # 2. Polynomial Features and Scaling
     poly = PolynomialFeatures(degree=2, include_bias=False)
@@ -394,51 +397,51 @@ elif page == "Motor Cars":
         'Total Motor Cars Production': future_data['total_motor_cars_production'],
         'Predicted motor_mt': future_predictions
     })
-    st.write("\nPredictions of CO2 Emissions from Motor for 2021–2030:")
-    st.write(future_results)
+    
+    fig2 = go.Figure()
 
-    
-    # 8. Combine Data for Plotting
-    all_years = np.concatenate([X['year'], future_data['year']])
-    all_predictions = np.concatenate([predictions, future_predictions])
-    all_data = pd.DataFrame({
-        'year': all_years,
-        'motor_mt': np.concatenate([y, [np.nan] * len(future_years)]),
-        'predicted_motor_kt': all_predictions
-    })
+    # Add scatter for actual values (2010–2020)
+    fig2.add_trace(
+        go.Scatter(
+            x=data['year'],
+            y=y,
+            mode='markers',
+            name='Actual Motor Production',
+            marker=dict(color='green', size=10, opacity=0.8),
+            hovertemplate='Year: %{x}<br>CO₂ (kt): %{y:.2f}<extra></extra>'
+        )
+    )
 
-    # 9. Enhanced Plot for 2010–2030
-    fig4 = plt.figure(figsize=(14, 8))
-    # Plot actual data (2010–2020)
-    plt.scatter(all_data['year'][:len(y)], all_data['motor_mt'][:len(y)], 
-                color='blue', label='Actual motor_mt', s=150, zorder=5)
-    # Plot predictions (2010–2030)
-    plt.plot(all_data['year'], all_data['predicted_motor_kt'], 
-            color='red', marker='o', linestyle='-', linewidth=3, markersize=12, 
-            label='Predicted motor_mt', zorder=4)
-    # Highlight forecast period
-    plt.axvspan(2020.5, 2030.5, color='gray', alpha=0.2, label='Forecast Period', zorder=1)
-    # Zoom y-axis to emphasize fluctuations
-    y_min = min(future_predictions.min(), y.min()) - 5
-    y_max = max(future_predictions.max(), y.max()) + 5
-    plt.ylim(y_min, y_max)
-    plt.xlabel('Year', fontsize=14)
-    plt.ylabel('CO2 Emissions from Motor', fontsize=14)
-    plt.title('Predictions (2010–2030) of CO2 Emissions from Motor', fontsize=16)
-    plt.legend(fontsize=12)
-    plt.grid(True, linestyle='--', alpha=0.7)
-    plt.minorticks_on()
-    plt.grid(which='minor', linestyle=':', alpha=0.4)
-    plt.xticks(np.arange(2010, 2031, 1), rotation=45, fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.tight_layout()
-    plt.show()
-    st.pyplot(fig4)
+    # Add line for predicted values (2021–2030)
+    fig2.add_trace(
+        go.Scatter(
+            x=future_data['year'],
+            y=future_predictions,
+            mode='lines+markers',
+            name='Predicted Motor Production',
+            line=dict(color='blue', width=2),
+            marker=dict(size=8),
+            hovertemplate='Year: %{x}<br>CO₂ (kt): %{y:.2f}<extra></extra>'
+        )
+    )
+
+    # Add transition line at 2020
+    fig2.add_vline(x=2020, line=dict(color='gray', dash='dash'), annotation_text='2020 (Transition)')
+
+    fig2.update_layout(
+        title='CO₂ Produced from Motor: Actual (2010–2020) and Predicted (2021–2030)',
+        xaxis_title='Year',
+        yaxis_title='CO₂ Produced from Motor (megatonnes)',
+        hovermode='x unified',
+        showlegend=True,
+        template='plotly_white',
+        xaxis=dict(gridcolor='rgba(200,200,200,0.3)'),
+        yaxis=dict(gridcolor='rgba(200,200,200,0.3)')
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
     
-    
-    
-    
-    #time series
+    # time series
     # Set 'year' as the index for ARIMA (optional, but helps with time series)
     data['year'] = pd.to_datetime(data['year'], format='%Y')  # Convert year to datetime
     data.set_index('year', inplace=True)
@@ -459,34 +462,61 @@ elif page == "Motor Cars":
     forecast_years = pd.date_range(start=f'{last_year + 1}-01-01', periods=forecast_steps, freq='YS')
     forecast_series = pd.Series(forecast, index=forecast_years)
 
-    # Print forecast with years
-    st.write("\nForecasted CO2 Emissions from Motor (2021-2035):")
-    st.write(forecast_series)
+    # Combine years for x-axis range
+    combined_years = list(data.index.year) + list(forecast_series.index.year)
 
+    # Create figure
+    fig3 = go.Figure()
 
-    # Plot historical and forecast data
-    fig5 = plt.figure(figsize=(10, 6))
-    plt.plot(data.index, data['motor_mt'], label='Historical')
-    plt.plot(forecast_series.index, forecast_series, label='Forecast', linestyle='--')
-    plt.legend()
-    plt.title('CO2 Emissions from Motor Forecast')
-    plt.xlabel('Year')
-    plt.ylabel('CO2 emission from Motor')
-    plt.grid(True)
-    plt.show()
-    st.pyplot(fig5)
-    
-    
+    # Historical data trace
+    fig3.add_trace(go.Scatter(
+        x=data.index.year,
+        y=data['motor_mt'],
+        mode='lines+markers',
+        name='Historical',
+        line=dict(color='royalblue', width=3),
+        marker=dict(size=6),
+        hovertemplate='Year: %{x}<br>CO₂: %{y:.2f} Mt<extra></extra>'
+    ))
 
-    
-    
-    
-    
-    
+    # Forecast trace
+    fig3.add_trace(go.Scatter(
+        x=forecast_series.index.year,
+        y=forecast_series,
+        mode='lines+markers',
+        name='Forecast',
+        line=dict(color='orange', width=3, dash='dash'),
+        marker=dict(size=6),
+        hovertemplate='Year: %{x}<br>CO₂: %{y:.2f} Mt<extra></extra>'
+    ))
+
+    # Update layout
+    fig3.update_layout(
+        title='CO₂ Emissions from Motor Forecast (2021–2035)',
+        xaxis_title='Year',
+        yaxis_title='CO₂ Emission from Motor (Mt)',
+        hovermode='x unified',
+        template='plotly_white',
+        xaxis=dict(
+            tickmode='linear',
+            dtick=1,
+            range=[min(combined_years) - 1, max(combined_years) + 1],
+            gridcolor='rgba(200,200,200,0.3)'
+        ),
+        yaxis=dict(
+            range=[
+                min(data['motor_mt'].min(), forecast_series.min()) - 10,
+                max(data['motor_mt'].max(), forecast_series.max()) + 10
+            ],
+            gridcolor='rgba(200,200,200,0.3)'
+        )
+    )
+    # Display in Streamlit
+    st.plotly_chart(fig3, use_container_width=True)
+
 elif page == "AQI Category":
     st.title("AQI Category")
 
-    # --- AQI Calculation Functions ---
     # --- AQI Calculation Functions ---
     def nox_gkm_to_ugm3(nox_gkm, speed, fuel_type='petrol'):
         distance_km = speed
@@ -526,9 +556,15 @@ elif page == "AQI Category":
         else:
             return "Hazardous"
 
-    def predict_nox_emissions(user_input, model, scaler, features, numerical_cols):
-        input_df = pd.DataFrame([user_input], columns=['Engine Size', 'Age of Vehicle', 'Temperature',
-                                                    'Wind Speed', 'Speed', 'Traffic Conditions', 'Road Type'])
+    def predict_nox_emissions(user_input, model, scaler, features, numerical_cols, fuel_type):
+        # Dynamically set columns based on fuel type
+        if fuel_type == 'Electric':
+            columns = ['Age of Vehicle', 'Temperature', 'Wind Speed', 'Speed', 'Traffic Conditions', 'Road Type']
+            features = [f for f in features if f != 'Engine Size']
+            numerical_cols = [n for n in numerical_cols if n != 'Engine Size']
+        else:
+            columns = ['Engine Size', 'Age of Vehicle', 'Temperature', 'Wind Speed', 'Speed', 'Traffic Conditions', 'Road Type']
+        input_df = pd.DataFrame([user_input], columns=columns)
         input_df = pd.get_dummies(input_df, columns=['Traffic Conditions', 'Road Type'], drop_first=True)
         for col in features:
             if col not in input_df.columns:
@@ -538,28 +574,30 @@ elif page == "AQI Category":
         nox_emission = model.predict(input_df)[0]
         return max(0, nox_emission)
 
-
-   # --- Streamlit App ---
+    # --- Streamlit App ---
     st.title("NOx Emission and AQI Prediction for Vehicles")
 
     # Sidebar for input parameters
     with st.sidebar:
+        fuel_type = st.selectbox("Fuel Type", options=["Petrol", "Electric", "Diesel", "All"])
+        if fuel_type != 'Electric' and fuel_type != 'All':
+            engine_size = st.number_input("Engine Size (liters)", min_value=0.0, max_value=6.0, value=2.0, step=0.1)
+        else:
+            engine_size = None
+            st.write("- **Engine Size**: not-applicable for Electric vehicles or All comparison")
         st.header("Input Vehicle Parameters")
         st.markdown("**Maximum Allowable Input Values:**")
         st.write("- **Engine Size**: 6.0 liters")
-        st.write("- **Age of Vehicle**: 30 years")
         st.write("- **Temperature**: 40°C")
         st.write("- **Vehicle Speed**: 120 km/h")
         st.write("- **Wind Speed**: 30 km/h")
         st.markdown("---")
-        fuel_type = st.selectbox("Fuel Type", ["Petrol", "Electric", "Diesel"])
-        engine_size = st.number_input("Engine Size (liters)", min_value=0.0, max_value=6.0, value=2.0, step=0.1)
         age = st.number_input("Age of Vehicle (years)", min_value=0, max_value=30, value=5)
         temperature = st.number_input("Temperature (°C)", min_value=-10.0, max_value=40.0, value=25.0, step=1.0)
         speed = st.number_input("Vehicle Speed (km/h)", min_value=10.0, max_value=120.0, value=50.0, step=5.0)
         wind_speed = st.number_input("Wind Speed (km/h)", min_value=0.0, max_value=30.0, value=10.0, step=1.0)
-        traffic_condition = st.selectbox("Traffic Condition", ["Free flow", "Moderate", "Heavy"])
-        road_type = st.selectbox("Road Type", ["City", "Rural", "Highway"])
+        traffic_condition = st.selectbox("Traffic Condition", options=["Free flow", "Moderate", "Heavy"])
+        road_type = st.selectbox("Road Type", options=["City", "Rural", "Highway"])
 
     # Load models and scalers
     models = {}
@@ -577,22 +615,67 @@ elif page == "AQI Category":
 
     # Define features (consistent across all fuel types)
     features = [
-        'Engine Size', 'Age of Vehicle', 'Temperature', 'Wind Speed', 'Speed','Traffic Conditions_Heavy',
-        'Traffic Conditions_Moderate',
+        'Engine Size', 'Age of Vehicle', 'Temperature', 'Wind Speed', 'Speed',
+        'Traffic Conditions_Heavy', 'Traffic Conditions_Moderate',
         'Road Type_Highway', 'Road Type_Rural'
     ]
     numerical_cols = ['Engine Size', 'Age of Vehicle', 'Temperature', 'Wind Speed', 'Speed']
 
-    # Initialize session state
-    if 'results' not in st.session_state:
-        st.session_state.results = {ft: {'nox_emission': None, 'nox_aqi': None, 'aqi_category': None} for ft in ['Petrol', 'Electric', 'Diesel']}
-
-    # Compute NOx and AQI for selected fuel type
-    if st.button("Get Result"):
-        if engine_size < 0.5 and fuel_type != 'Electric':
-            st.warning("Engine Size is too small (less than 0.5 liters). Assuming NOx Emission is 0.")
-            nox_emission_gkm = 0.0
-        else:
+    if fuel_type == 'All':
+        fuel_types = ['Petrol', 'Diesel', 'Electric']
+        nox_emissions = []
+        aqi_values = []
+        aqi_categories = []
+        for ft in fuel_types:
+            if ft == 'Electric':
+                user_input_ft = {
+                    'Age of Vehicle': age,
+                    'Temperature': temperature,
+                    'Wind Speed': wind_speed,
+                    'Speed': speed,
+                    'Traffic Conditions': traffic_condition,
+                    'Road Type': road_type
+                }
+                num_cols_ft = [n for n in numerical_cols if n != 'Engine Size']
+                features_ft = [f for f in features if f != 'Engine Size']
+                engine_size_ft = None
+            else:
+                user_input_ft = {
+                    'Engine Size': engine_size if engine_size is not None else 2.0,
+                    'Age of Vehicle': age,
+                    'Temperature': temperature,
+                    'Wind Speed': wind_speed,
+                    'Speed': speed,
+                    'Traffic Conditions': traffic_condition,
+                    'Road Type': road_type
+                }
+                num_cols_ft = numerical_cols
+                features_ft = features
+                engine_size_ft = engine_size if engine_size is not None else 2.0
+            nox_emission_gkm = predict_nox_emissions(user_input_ft, models[ft], scalers[ft], features_ft, num_cols_ft, ft)
+            nox_emissions.append(nox_emission_gkm)
+            nox_emission_ugm3 = nox_gkm_to_ugm3(nox_emission_gkm, speed, fuel_type=ft)
+            nox_aqi = calculate_nox_aqi(nox_emission_ugm3)
+            aqi_values.append(nox_aqi)
+            aqi_categories.append(get_aqi_category(nox_aqi))
+        st.subheader("Comparison of NOx Emission and AQI (All Fuel Types)")
+        comparison_df = pd.DataFrame({
+            'Fuel Type': fuel_types,
+            'NOx Emission (g/km)': np.round(nox_emissions, 2),
+            'NOx AQI': np.round(aqi_values, 2),
+            'AQI Category': aqi_categories
+        })
+        st.dataframe(comparison_df)
+        fig = px.bar(comparison_df, x='Fuel Type', y='NOx Emission (g/km)', color='Fuel Type',
+                     text='NOx Emission (g/km)', title='NOx Emission Comparison')
+        fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+        st.plotly_chart(fig)
+        fig2 = px.bar(comparison_df, x='Fuel Type', y='NOx AQI', color='Fuel Type',
+                      text='NOx AQI', title='NOx AQI Comparison')
+        fig2.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+        st.plotly_chart(fig2)
+    else:
+        if fuel_type != 'Electric':
             user_input = {
                 'Engine Size': engine_size,
                 'Age of Vehicle': age,
@@ -602,73 +685,43 @@ elif page == "AQI Category":
                 'Traffic Conditions': traffic_condition,
                 'Road Type': road_type
             }
-            # Compute for selected fuel type
-            nox_emission_gkm = predict_nox_emissions(user_input, models[fuel_type], scalers[fuel_type], features, numerical_cols)
-            st.session_state.results[fuel_type]['nox_emission'] = nox_emission_gkm
-            st.write(f"**Debug: Predicted NOx Emission ({fuel_type})**: {nox_emission_gkm:.4f} g/km")
+        else:
+            user_input = {
+                'Age of Vehicle': age,
+                'Temperature': temperature,
+                'Wind Speed': wind_speed,
+                'Speed': speed,
+                'Traffic Conditions': traffic_condition,
+                'Road Type': road_type
+            }
+        # Compute for selected fuel type
+        nox_emission_gkm = predict_nox_emissions(user_input, models[fuel_type], scalers[fuel_type], features, numerical_cols, fuel_type)
+        st.write(f"**Debug: Predicted NOx Emission ({fuel_type})**: {nox_emission_gkm:.4f} g/km")
 
         st.subheader(f"Prediction Result ({fuel_type})")
         st.write(f"**NOx Emission**: {nox_emission_gkm:.4f} g/km")
 
-        if (engine_size < 0.0 or engine_size > 6.0 or age < 0 or age > 30 or
-            temperature < -10 or temperature > 40 or speed < 10 or speed > 120 or
-            wind_speed < 0 or wind_speed > 30):
+        if (engine_size is not None and (engine_size < 0.0 or engine_size > 6.0)) or age < 0 or age > 30 or \
+            temperature < -10 or temperature > 40 or speed < 10 or speed > 120 or \
+            wind_speed < 0 or wind_speed > 30:
             st.warning("Input values are outside typical ranges. Predictions may be less reliable.")
 
-    # Compute AQI for all fuel types
-    if st.button("Get AQI"):
-        comparison_data = []
-        for ft in ['Petrol', 'Electric', 'Diesel']:
-            if st.session_state.results[ft]['nox_emission'] is not None:
-                nox_emission_ugm3 = nox_gkm_to_ugm3(st.session_state.results[ft]['nox_emission'], speed, fuel_type=ft)
-                nox_aqi = calculate_nox_aqi(nox_emission_ugm3)
-                aqi_category = get_aqi_category(nox_aqi)
-                st.session_state.results[ft]['nox_aqi'] = nox_aqi
-                st.session_state.results[ft]['aqi_category'] = aqi_category
+        # Compute AQI only for the selected fuel type
+        if st.button("Get AQI"):
+            nox_emission_ugm3 = nox_gkm_to_ugm3(nox_emission_gkm, speed, fuel_type=fuel_type)
+            nox_aqi = calculate_nox_aqi(nox_emission_ugm3)
+            aqi_category = get_aqi_category(nox_aqi)
 
-                st.subheader(f"AQI Result ({ft})")
-                st.write(f"**Debug: NOx Concentration**: {nox_emission_ugm3:.2f} µg/m³")
-                st.write(f"**NOx Emission (converted)**: {nox_emission_ugm3:.2f} µg/m³")
-                st.write(f"**NOx AQI**: {nox_aqi:.1f}")
-                st.write(f"**AQI Category**: {aqi_category}")
-
-                # Individual bar chart
-                results = pd.DataFrame({
-                    'Metric': ['NOx Emission (µg/m³)', 'NOx AQI'],
-                    'Value': [nox_emission_ugm3, nox_aqi]
-                })
-                fig = px.bar(results, x='Metric', y='Value', title=f'NOx Emission and AQI ({ft})',
-                            color='Metric', text='Value', height=400)
-                fig.update_traces(texttemplate='%{text:.2f}', textposition='auto')
-                st.plotly_chart(fig)
-
-                comparison_data.append({
-                    'Fuel Type': ft,
-                    'NOx AQI': nox_aqi,
-                    'AQI Category': aqi_category,
-                    'NOx Emission (µg/m³)': nox_emission_ugm3
-                })
-
-        # Comparison bar chart
-        if comparison_data:
-            comparison_df = pd.DataFrame(comparison_data)
-            fig = px.bar(comparison_df, x='Fuel Type', y='NOx AQI',
-                        color='AQI Category', title='NOx AQI Comparison Across Fuel Types',
-                        text='NOx AQI', height=500)
-            fig.update_traces(texttemplate='%{text:.1f}', textposition='auto')
+            st.subheader(f"AQI Result ({fuel_type})")
+            st.write(f"**Debug: NOx Concentration**: {nox_emission_ugm3:.2f} µg/m³")
+            st.write(f"**NOx Emission (converted)**: {nox_emission_ugm3:.2f} µg/m³")
+            st.write(f"**NOx AQI**: {nox_aqi:.1f}")
+            st.write(f"**AQI Category**: {aqi_category}")
+            results = pd.DataFrame({
+                'Metric': ['NOx Emission (µg/m³)', 'NOx AQI'],
+                'Value': [round(nox_emission_ugm3, 2), round(nox_aqi, 2)]
+            })
+            fig = px.bar(results, x='Metric', y='Value', title=f'NOx Emission and AQI ({fuel_type})',
+                         color='Metric', text='Value', height=400)
+            fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
             st.plotly_chart(fig)
-
-            worst_fuel = comparison_df.loc[comparison_df['NOx AQI'].idxmax(), 'Fuel Type']
-            st.write(f"**Conclusion**: {worst_fuel} has the highest NOx AQI ({comparison_df['NOx AQI'].max():.1f}), indicating it is the most harmful to the environment.")
-        else:
-            st.info("Please click 'Get Result' for at least one fuel type to compute AQI.") 
-            
-            
-            
-            
-            
-elif page == "Aged Vehicles Comparison":
-    st.title("Aged Vehicles Comparison")
-    
-    
-    
